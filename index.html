@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title></title>
+    <link rel="stylesheet" href="map.css" type="text/css" />
+    <link rel="stylesheet" href="style2.css" type="text/css" />
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon" />
+    
+    <style>
+    .marker-image {
+        width:28px;
+        height:44px;
+        margin-left:-12px;
+        margin-top:-13px;
+        pointer-events:all;
+        cursor: pointer;
+        position:absolute;
+    }
+    </style>
+    
+  </head>
+  <body>
+      <div class="layers" id="crime">
+      </div>
+      <div class="layers" id="locations">
+      </div>
+          
+    <div id="map" class="map"></div>
+
+    <!-- External libraries and site script -->
+    <script src='http://api.tiles.mapbox.com/mapbox.js/v0.6.6/mapbox.js'></script>
+    <link href='http://api.tiles.mapbox.com/mapbox.js/v0.6.6/mapbox.css' rel='stylesheet' />
+    <script src='ext/ender.js'></script>
+    <script src='ext/mapbox.converters.googledocs.js'></script>
+
+    <!-- Site configuration -->
+    <script type="text/javascript">
+    
+    var map = mapbox.map('map');
+    map.addLayer(mapbox.layer().id('gmaclennan.map-y7pgvo15'));
+    
+// Spreadsheet ID    0AtH_pDdto56YdGwzVU5Mb0F0QjY1WklqYzhtRjJ2d3c
+// Worksheet ID       od6
+
+    mapbox.converters.googledocs('0AtH_pDdto56YdGwzVU5Mb0F0QjY1WklqYzhtRjJ2d3c', 'od6', function(features) {
+        var markersLayer = mapbox.markers.layer().features(features).factory(function(f) {
+            // Define a new factory function. This takes a GeoJSON object
+            // as its input and returns an element - in this case an image -
+            // that represents the point.
+            var img = document.createElement('img');
+            img.className = 'marker-image';
+            img.setAttribute('src', 'img/marker.png');
+            return img;
+        });
+        var locations = getUniqRecords(features,'location');
+        $.each(locations, function (el) {
+            var filteredFeatures = $.filter(features, function (obj) { return obj.properties.location === el; });
+            var ext = extent(filteredFeatures, el);
+            var layerNode = $('<a data-control="layer" href="#' + el + '">'+el+'</a>').data('ext',ext)
+            $('div.layers#locations').append(layerNode);
+        })
+        var allNode = $('<a data-control="layer" href="#all">All</a>').data('ext',markersLayer.extent())
+        $('div.layers#crime').append(allNode);
+        
+        var interaction = mapbox.markers.interaction(markersLayer);
+        // Set a custom formatter for tooltips
+        // Provide a function that returns html to be used in tooltip
+        interaction.formatter(function(feature) {
+           var o = '<a target="_blank" href="' + feature.properties.gallery + '">' +
+               '<img src="' + feature.properties.photo + '">' +
+               '<h2>' + feature.properties.name + '</h2>' +
+               '</a>' +
+               '<p>Users: ' + feature.properties.users + '<br>' +
+               'Location: ' + feature.properties.location + '</p>';
+
+           return o;
+        });
+        map.addLayer(markersLayer).setExtent(markersLayer.extent());
+        // enable the zoomer control. adds + and - buttons to the map
+        map.ui.zoomer.add();
+    });
+    
+    var getUniqRecords = function (ft, key) {
+        results = $.chain(ft)
+                    .map(function (el) { return el.properties[key]; })
+                    .uniq()
+                    .reject(function (val) { return val === ""; })
+                    .value();
+        return results;
+    }
+    
+    $('body')
+       .on('click.map', '[data-control="layer"]', function(e) {
+       var $this = $(this),
+           id = $this.attr('href');
+       id = id.replace(/.*(?=#[^\s]+$)/, '')
+           .slice(1);
+       var ext = $this.data('ext');
+       console.log(ext);
+       map.setExtent(ext);
+       e.preventDefault();
+   });
+
+    
+    var extent = function (ft, location) {
+            var ext = [{
+                lat: Infinity,
+                lon: Infinity
+            }, {
+                lat: -Infinity,
+                lon: -Infinity
+            }];
+            for (var i = 0; i < ft.length; i++) {
+                var coords = ft[i].geometry.coordinates;
+                if (coords[0] < ext[0].lon) ext[0].lon = coords[0];
+                if (coords[1] < ext[0].lat) ext[0].lat = coords[1];
+                if (coords[0] > ext[1].lon) ext[1].lon = coords[0];
+                if (coords[1] > ext[1].lat) ext[1].lat = coords[1];
+            }
+            return ext;
+        };
+    </script>
+</body>
+</html>
