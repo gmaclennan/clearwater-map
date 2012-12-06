@@ -41,7 +41,12 @@
     <script type="text/javascript">
     
     var map = mapbox.map('map');
-    map.addLayer(mapbox.layer().id('gmaclennan.map-y7pgvo15'));
+    
+    mapbox.load('gmaclennan.map-y7pgvo15', function(o) {
+        map.addLayer(o.layer);
+        map.zoom(o.zoom);
+        map.center(o.center);
+    });
     
 // Spreadsheet ID    0AtH_pDdto56YdGwzVU5Mb0F0QjY1WklqYzhtRjJ2d3c
 // Worksheet ID       od6
