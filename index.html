@@ -65,10 +65,12 @@
         $.each(locations, function (el) {
             var filteredFeatures = $.filter(features, function (obj) { return obj.properties.location === el; });
             var ext = extent(filteredFeatures, el);
-            var layerNode = $('<a data-control="layer" href="#' + el + '">'+el+'</a>').data('ext',ext)
+            var layerNode = $('<a data-control="layer" href="#' + el + '">'+el+'</a>')
+                .data('ext',ext)
             $('div.layers#locations').append(layerNode);
         })
-        var allNode = $('<a data-control="layer" href="#all">All</a>').data('ext',markersLayer.extent())
+        var allNode = $('<a data-control="layer" href="#all" class="active">All Villages</a>')
+            .data('ext',markersLayer.extent())
         $('div.layers#crime').append(allNode);
         
         var interaction = mapbox.markers.interaction(markersLayer);
@@ -105,6 +107,8 @@
        id = id.replace(/.*(?=#[^\s]+$)/, '')
            .slice(1);
        var ext = $this.data('ext');
+       $('[data-control="layer"]').removeClass('active');
+       $this.addClass('active');
        map.ease.to(map.extentCoordinate(ext)).optimal()
        e.preventDefault();
    });
