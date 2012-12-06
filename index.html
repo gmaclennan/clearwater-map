@@ -84,7 +84,7 @@
 
            return o;
         });
-        map.addLayer(markersLayer).setExtent(markersLayer.extent());
+        map.addLayer(markersLayer).ease.to(map.extentCoordinate(markersLayer.extent())).optimal();
         // enable the zoomer control. adds + and - buttons to the map
         map.ui.zoomer.add();
     });
@@ -105,8 +105,7 @@
        id = id.replace(/.*(?=#[^\s]+$)/, '')
            .slice(1);
        var ext = $this.data('ext');
-       console.log(ext);
-       map.setExtent(ext);
+       map.ease.to(map.extentCoordinate(ext)).optimal()
        e.preventDefault();
    });
 
